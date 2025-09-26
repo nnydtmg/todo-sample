@@ -68,8 +68,11 @@ todo-app/
 - Java 17以上
 - Node.js とnpm
 - MySQL
+- Docker および Docker Compose（Dockerで実行する場合）
 
-### バックエンドの起動
+### 1. ローカルでの起動（Docker不使用）
+
+#### バックエンドの起動
 1. MySQLでデータベースを作成（名前: todo_db）
 ```sql
 CREATE DATABASE todo_db;
@@ -83,7 +86,7 @@ cd backend
 ./mvnw spring-boot:run -Dspring.profiles.active=local
 ```
 
-### フロントエンドの起動
+#### フロントエンドの起動
 1. パッケージをインストール
 ```bash
 cd frontend
@@ -96,6 +99,25 @@ npm start
 ```
 
 3. ブラウザで http://localhost:3000 にアクセス
+
+### 2. Dockerでの起動
+
+1. Docker Composeを使用してアプリケーションを起動
+```bash
+docker-compose up -d
+```
+
+2. ブラウザで http://localhost:3000 にアクセス
+
+3. アプリケーションの停止
+```bash
+docker-compose down
+```
+
+データベースを完全に初期化する場合:
+```bash
+docker-compose down -v
+```
 
 ## AWS環境へのデプロイ
 

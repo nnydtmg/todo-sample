@@ -1,0 +1,44 @@
+# ビルドコンテキストから除外するファイル/ディレクトリ
+
+# 依存関係
+node_modules
+npm-debug.log
+
+# ビルド成果物
+build
+dist
+coverage
+
+# バージョン管理関連
+.git
+.github
+.gitignore
+
+# 開発用設定ファイル
+*.log
+.DS_Store
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# エディタ設定
+.vscode
+.idea
+*.swp
+*.swo
+
+# Docker関連ファイル
+Dockerfile*
+.dockerignore
+
+# ドキュメント
+README.md
+LICENSE
+*.md
+
+# テスト関連
+__tests__
+*.test.*
+*.spec.*

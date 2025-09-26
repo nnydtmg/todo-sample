@@ -1,0 +1,41 @@
+# ビルドコンテキストから除外するファイル/ディレクトリ
+
+# コンパイル済みのクラスファイルやビルド成果物
+target/
+*.class
+*.jar
+*.war
+
+# メタデータ
+.git/
+.github/
+.gitignore
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+.factorypath
+
+# ログファイル
+logs/
+*.log
+
+# テストレポートや一時ファイル
+.mvn/
+mvnw
+mvnw.cmd
+
+# Docker関連ファイル
+Dockerfile*
+.dockerignore
+
+# ドキュメント
+README.md
+LICENSE
+*.md
+
+# その他
+.DS_Store
