@@ -28,8 +28,7 @@ RUN apk add --no-cache tzdata && \
     echo "Asia/Tokyo" > /etc/timezone && \
     apk del tzdata
 
-# ログ出力用のディレクトリ作成と権限設定
-RUN mkdir -p /app/logs && chmod 777 /app/logs
+# 本番環境では標準出力にログ出力するため、ディレクトリは不要
 
 # セキュリティのため、非rootユーザーを作成
 RUN addgroup -S spring && adduser -S spring -G spring

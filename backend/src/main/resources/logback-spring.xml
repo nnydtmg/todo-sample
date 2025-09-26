@@ -45,11 +45,10 @@
         <logger name="com.example.todo" level="DEBUG" />
     </springProfile>
 
-    <!-- 本番環境 -->
+    <!-- 本番環境（標準出力のみ） -->
     <springProfile name="prod">
         <root level="INFO">
             <appender-ref ref="CONSOLE" />
-            <appender-ref ref="FILE" />
         </root>
         <logger name="com.example.todo" level="INFO" />
         <logger name="org.springframework" level="WARN" />
