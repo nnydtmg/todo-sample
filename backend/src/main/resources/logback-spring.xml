@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- プロパティ定義 -->
+    <property name="LOG_DIR" value="logs" />
+    <property name="LOG_FILE_NAME" value="todo-app" />
+
+    <!-- コンソール出力設定 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ファイル出力設定（日次ローテーション） -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${LOG_FILE_NAME}.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory> <!-- 30日分保持 -->
+            <totalSizeCap>3GB</totalSizeCap> <!-- 合計サイズ上限 -->
+        </rollingPolicy>
+    </appender>
+
+    <!-- プロファイル別のログレベル設定 -->
+    <!-- ローカル環境 -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
+        </root>
+        <logger name="com.example.todo" level="DEBUG" />
+        <logger name="org.springframework.web" level="DEBUG" />
+    </springProfile>
+
+    <!-- テスト環境 -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+        <logger name="com.example.todo" level="DEBUG" />
+    </springProfile>
+
+    <!-- 本番環境 -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
+        </root>
+        <logger name="com.example.todo" level="INFO" />
+        <logger name="org.springframework" level="WARN" />
+    </springProfile>
+
+    <!-- デフォルト設定（プロファイルが指定されていない場合） -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+        <logger name="com.example.todo" level="INFO" />
+    </springProfile>
+</configuration>

@@ -23,6 +23,7 @@ ADRは、ソフトウェア設計における重要な決定とその理由を�
 7. [開発環境のDevcontainer導入](./0007-development-environment.md)
 8. [環境固有の設定管理](./0008-environment-specific-config.md)
 9. [バックエンドのマルチステージDockerビルド](./0009-docker-multi-stage-build.md)
+10. [Logbackを使用したログ設定](./0010-logback-configuration.md)
 
 ## 参考
 
