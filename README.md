@@ -38,13 +38,16 @@ todo-app/
 │   │   ├── main/
 │   │   │   ├── java/
 │   │   │   │   └── com/example/todo/
+│   │   │   │       ├── config/      # 設定クラス
 │   │   │   │       ├── controller/  # RESTコントローラー
 │   │   │   │       ├── dto/         # データ転送オブジェクト
 │   │   │   │       ├── model/       # エンティティ
 │   │   │   │       ├── repository/  # リポジトリ
 │   │   │   │       └── service/     # サービス
 │   │   │   └── resources/
-│   │   │       ├── application.properties  # アプリケーション設定
+│   │   │       ├── application.properties       # 共通設定
+│   │   │       ├── application-local.properties # ローカル環境設定
+│   │   │       ├── application-prod.properties  # 本番環境設定
 │   │   │       └── db/migration/    # Flywayマイグレーションスクリプト
 │   │   └── test/                    # テストコード
 │   └── pom.xml                      # Mavenプロジェクト設定
@@ -72,12 +75,12 @@ todo-app/
 CREATE DATABASE todo_db;
 ```
 
-2. `application.properties`でデータベース接続設定を確認・変更
+2. `application-local.properties`でデータベース接続設定を確認・変更
 
-3. バックエンドプロジェクトを実行
+3. バックエンドプロジェクトを実行（localプロファイルを使用）
 ```bash
 cd backend
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring.profiles.active=local
 ```
 
 ### フロントエンドの起動
@@ -93,6 +96,28 @@ npm start
 ```
 
 3. ブラウザで http://localhost:3000 にアクセス
+
+## AWS環境へのデプロイ
+
+本番環境（AWS）にデプロイする場合は、以下の環境変数を設定する必要があります：
+
+```
+DB_URL=jdbc:mysql://[RDSのエンドポイント]:3306/todo_db?useSSL=true
+DB_USERNAME=[データベースのユーザー名]
+DB_PASSWORD=[データベースのパスワード]
+CORS_ALLOWED_ORIGINS=https://[本番環境のドメイン]
+```
+
+そして、prodプロファイルを使用してアプリケーションを起動します：
+
+```bash
+java -jar app.jar --spring.profiles.active=prod
+```
+
+## 開発環境
+
+Visual Studio CodeのDevContainerを使用して開発環境を統一できます。
+`.devcontainer`ディレクトリに必要な設定が含まれています。
 
 ## API エンドポイント
 
