@@ -21,6 +21,7 @@ ADRは、ソフトウェア設計における重要な決定とその理由を�
 5. [テスト戦略](./0005-testing-strategy.md)
 6. [UIコンポーネント設計](./0006-ui-component-design.md)
 7. [開発環境のDevcontainer導入](./0007-development-environment.md)
+8. [環境固有の設定管理](./0008-environment-specific-config.md)
 
 ## 参考
 
