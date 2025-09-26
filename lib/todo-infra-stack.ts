@@ -43,7 +43,7 @@ export class TodoInfraStack extends cdk.Stack {
       description: 'Security group for ALB',
       allowAllOutbound: true,
     });
-    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow HTTP from anywhere');
+    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8080), 'Allow HTTP from anywhere');
 
     const fargateServiceSg = new ec2.SecurityGroup(this, 'FargateServiceSecurityGroup', {
       vpc,
@@ -126,7 +126,7 @@ export class TodoInfraStack extends cdk.Stack {
     });
 
     const httpListener = alb.addListener('HttpListener', {
-      port: 80,
+      port: 8080,
       protocol: elbv2.ApplicationProtocol.HTTP,
       open: true,
     });
