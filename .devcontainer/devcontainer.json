@@ -1,0 +1,43 @@
+{
+  "name": "Todo App Development",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "pivotal.vscode-spring-boot",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "dsznajder.es7-react-js-snippets",
+        "msjsdiag.vscode-react-native",
+        "ms-vscode.vscode-typescript-next",
+        "dbaeumer.vscode-eslint"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        },
+        "eslint.validate": ["javascript", "typescript", "javascriptreact", "typescriptreact"]
+      }
+    }
+  },
+  "forwardPorts": [8080, 3000, 3306],
+  "remoteUser": "vscode",
+  "postCreateCommand": "sh ./.devcontainer/post-create.sh",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installMaven": true
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
+  }
+}
