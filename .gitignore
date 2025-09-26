@@ -6,3 +6,29 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# IntelliJ project files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VSCode project files
+.vscode/
+
+# Mac OS files
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Other
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
