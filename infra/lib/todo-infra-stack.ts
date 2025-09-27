@@ -171,7 +171,46 @@ export class TodoInfraStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AmazonECSTaskExecutionRolePolicy"
         ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMFullAccess"),
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "CloudWatchAgentServerPolicy"
+        ),
       ],
+    });
+
+    // Fargateタスクのタスクロール
+    const taskRole = new iam.Role(this, "TaskRole", {
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess"),
+      ],
+      inlinePolicies: {
+        CustomPolicy: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                "logs:PutLogEvents",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups",
+                "logs:PutRetentionPolicy",
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords",
+                "xray:GetSamplingRules",
+                "xray:GetSamplingTargets",
+                "xray:GetSamplingStatisticSummaries",
+                "cloudwatch:PutMetricData",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeTags",
+                "ssm:GetParameters",
+              ],
+              resources: ["*"],
+            }),
+          ],
+        }),
+      },
     });
 
     // タスク定義の作成
@@ -183,13 +222,18 @@ export class TodoInfraStack extends Stack {
         cpu: config.backend.task_cpu,
         memoryLimitMiB: config.backend.task_memory,
         executionRole: taskExecutionRole,
+        taskRole: taskRole,
       }
     );
+
+    taskDefinition.addVolume({
+      name: "opentelemetry-auto-instrumentation",
+    });
 
     // タスク定義にコンテナを追加
     const containerName = `${appName}-container`;
     const container = taskDefinition.addContainer(containerName, {
-      image: ecs.ContainerImage.fromEcrRepository(repository, "latest"), // プレースホルダ - 実際はECRリポジトリからのイメージを使用
+      image: ecs.ContainerImage.fromEcrRepository(repository, "latest"),
       logging: ecs.LogDrivers.awsLogs({
         streamPrefix: appName,
         logGroup,
@@ -197,6 +241,18 @@ export class TodoInfraStack extends Stack {
       environment: {
         SPRING_PROFILES_ACTIVE: "prod",
         DB_URL: `jdbc:mysql://${dbCluster.clusterEndpoint.hostname}:${dbCluster.clusterEndpoint.port}/${config.database.dbName}`,
+        OTEL_RESOURCE_ATTRIBUTES: "service.name=todo_app",
+        OTEL_LOGS_EXPORTER: "none",
+        OTEL_METRICS_EXPORTER: "none",
+        OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf",
+        OTEL_AWS_APPLICATION_SIGNALS_ENABLED: "true",
+        JAVA_TOOL_OPTIONS:
+          " -javaagent:/otel-auto-instrumentation/javaagent.jar",
+        OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT:
+          "http://localhost:4316/v1/metrics",
+        OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://localhost:4316/v1/traces",
+        OTEL_TRACES_SAMPLER: "xray",
+        OTEL_PROPAGATORS: "tracecontext,baggage,b3,xray",
       },
       secrets: {
         DB_USERNAME: ecs.Secret.fromSecretsManager(
@@ -208,11 +264,59 @@ export class TodoInfraStack extends Stack {
           "password"
         ),
       },
+      essential: true,
     });
 
     container.addPortMappings({
       containerPort: config.backend.container_port,
       protocol: ecs.Protocol.TCP,
+    });
+
+    container.addMountPoints({
+      sourceVolume: "opentelemetry-auto-instrumentation",
+      containerPath: "/otel-auto-instrumentation",
+      readOnly: false,
+    });
+
+    // Add CloudWatch Agent Container
+    const cloudWatchAgent = taskDefinition.addContainer("CloudWatchAgent", {
+      image: ecs.ContainerImage.fromRegistry(
+        "public.ecr.aws/cloudwatch-agent/cloudwatch-agent:latest-amd64"
+      ),
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: "CloudWatchAgent",
+        logGroup: new logs.LogGroup(this, "CloudWatchAgentLogGroup", {
+          retention: logs.RetentionDays.ONE_WEEK,
+        }),
+      }),
+      environment: {
+        CW_CONFIG_CONTENT:
+          '{"agent": {"debug": true}, "traces": {"traces_collected": {"application_signals": {"enabled": true}}}, "logs": {"metrics_collected": {"application_signals": {"enabled": true}}}}',
+      },
+    });
+
+    // Add ADOT Container
+    const initContainer = taskDefinition.addContainer("InitContainer", {
+      image: ecs.ContainerImage.fromRegistry(
+        "public.ecr.aws/aws-observability/adot-autoinstrumentation-java:v1.32.6"
+      ),
+      essential: false,
+      command: [
+        "cp",
+        "/javaagent.jar",
+        "/otel-auto-instrumentation/javaagent.jar",
+      ],
+    });
+    initContainer.addMountPoints({
+      sourceVolume: "opentelemetry-auto-instrumentation",
+      containerPath: "/otel-auto-instrumentation",
+      readOnly: false,
+    });
+
+    taskDefinition.defaultContainer = container;
+    container.addContainerDependencies({
+      container: initContainer,
+      condition: ecs.ContainerDependencyCondition.START,
     });
 
     // ALBの作成
@@ -386,6 +490,10 @@ export class TodoInfraStack extends Stack {
       {
         id: "AwsSolutions-ECS4",
         reason: "開発環境ではContainer Insightsを無効化",
+      },
+      {
+        id: "AwsSolutions-ECS7",
+        reason: "Otelを使用するため",
       },
       {
         id: "AwsSolutions-ECS2",
