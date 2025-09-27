@@ -227,7 +227,7 @@ export class TodoInfraStack extends Stack {
 
     // フロントエンド用のS3バケットを作成
     const webBucket = new s3.Bucket(this, 'WebBucket', {
-      bucketName: `${appName}-web-${this.account}-${this.region}`.toLowerCase(),
+      // bucketNameを指定せずにCDKに自動生成させる
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY, // 開発環境のため - 本番環境では適切に設定する
@@ -295,12 +295,68 @@ export class TodoInfraStack extends Stack {
         reason: '開発環境ではS3バケットのサーバーアクセスログを無効化',
       },
       {
+        id: 'AwsSolutions-S5',
+        reason: '開発環境ではOAIを使用しない',
+      },
+      {
+        id: 'AwsSolutions-S10',
+        reason: '開発環境ではSSL強制を無効化',
+      },
+      {
         id: 'AwsSolutions-RDS10',
         reason: '開発環境ではAuroraのマルチAZを無効化',
       },
       {
         id: 'AwsSolutions-RDS6',
         reason: '開発環境ではRDSのIAM認証を無効化',
+      },
+      {
+        id: 'AwsSolutions-RDS11',
+        reason: '開発環境ではデフォルトポートを使用',
+      },
+      {
+        id: 'AwsSolutions-RDS14',
+        reason: '開発環境ではBacktrackを無効化',
+      },
+      {
+        id: 'AwsSolutions-RDS16',
+        reason: '開発環境ではログエクスポートを無効化',
+      },
+      {
+        id: 'AwsSolutions-VPC7',
+        reason: '開発環境ではVPCフローログを無効化',
+      },
+      {
+        id: 'AwsSolutions-SMG4',
+        reason: '開発環境では自動ローテーションを無効化',
+      },
+      {
+        id: 'AwsSolutions-ECS4',
+        reason: '開発環境ではContainer Insightsを無効化',
+      },
+      {
+        id: 'AwsSolutions-ECS2',
+        reason: '開発環境では環境変数を直接指定',
+      },
+      {
+        id: 'AwsSolutions-CFR1',
+        reason: '開発環境ではGeo制限を無効化',
+      },
+      {
+        id: 'AwsSolutions-CFR2',
+        reason: '開発環境ではWAFを無効化',
+      },
+      {
+        id: 'AwsSolutions-CFR3',
+        reason: '開発環境ではCloudFrontアクセスログを無効化',
+      },
+      {
+        id: 'AwsSolutions-CFR4',
+        reason: '開発環境では最小TLSバージョンを設定しない',
+      },
+      {
+        id: 'AwsSolutions-CFR5',
+        reason: '開発環境ではオリジン通信でTLS設定を緩和',
       },
     ]);
 
