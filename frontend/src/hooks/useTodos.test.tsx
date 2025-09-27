@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useTodos } from "./useTodos";
 import { TodoService } from "../services/TodoService";
 
@@ -43,7 +43,7 @@ describe("useTodos Hook", () => {
   });
 
   test("fetches todos on initial load", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useTodos());
+    const { result } = renderHook(() => useTodos());
     
     // 初期状態を確認
     expect(result.current.loading).toBe(true);
@@ -51,20 +51,23 @@ describe("useTodos Hook", () => {
     expect(result.current.todos).toEqual([]);
     
     // データ取得が完了するまで待機
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
     
     // データ取得後の状態を確認
-    expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
     expect(result.current.todos).toEqual(mockTodos);
     expect(TodoService.getAll).toHaveBeenCalledTimes(1);
   });
 
   test("adds a new todo", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useTodos());
+    const { result } = renderHook(() => useTodos());
     
     // データ取得が完了するまで待機
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
     
     const newTodo = {
       title: "新しいタスク",
@@ -89,10 +92,12 @@ describe("useTodos Hook", () => {
   });
 
   test("updates a todo", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useTodos());
+    const { result } = renderHook(() => useTodos());
     
     // データ取得が完了するまで待機
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
     
     const updatedTodo = {
       id: 1,
@@ -116,10 +121,12 @@ describe("useTodos Hook", () => {
   });
 
   test("deletes a todo", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useTodos());
+    const { result } = renderHook(() => useTodos());
     
     // データ取得が完了するまで待機
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
     
     // 削除前のtodosの長さを記録
     const lengthBeforeDelete = result.current.todos.length;
@@ -139,10 +146,12 @@ describe("useTodos Hook", () => {
   });
 
   test("toggles todo completed status", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useTodos());
+    const { result } = renderHook(() => useTodos());
     
     // データ取得が完了するまで待機
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
     
     // 完了状態を切り替え
     await act(async () => {
@@ -158,10 +167,12 @@ describe("useTodos Hook", () => {
     // getAll メソッドでエラーが発生するようにモック
     (TodoService.getAll as jest.Mock).mockRejectedValue(new Error("API error"));
     
-    const { result, waitForNextUpdate } = renderHook(() => useTodos());
+    const { result } = renderHook(() => useTodos());
     
     // データ取得が完了するまで待機
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
     
     // エラーが設定されていることを確認
     expect(result.current.loading).toBe(false);

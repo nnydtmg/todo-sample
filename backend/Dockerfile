@@ -1,5 +1,5 @@
 # マルチステージビルド - ビルドステージ
-FROM maven:3.8.6-eclipse-temurin-17-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 # 作業ディレクトリの設定
 WORKDIR /app
@@ -17,21 +17,25 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 実行ステージ
-FROM eclipse-temurin:17-jre-alpine
+FROM amazoncorretto:17-alpine
 
 # 作業ディレクトリの設定
 WORKDIR /app
 
 # タイムゾーンをJSTに設定
 RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
-    echo "Asia/Tokyo" > /etc/timezone && \
-    apk del tzdata
+  cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+  echo "Asia/Tokyo" > /etc/timezone && \
+  apk del tzdata
 
 # 本番環境では標準出力にログ出力するため、ディレクトリは不要
 
+# ログディレクトリを作成
+RUN mkdir -p /app/logs
+
 # セキュリティのため、非rootユーザーを作成
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN addgroup -S spring && adduser -S spring -G spring && \
+    chown -R spring:spring /app
 USER spring:spring
 
 # ビルドステージからjarファイルをコピー
