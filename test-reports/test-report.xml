@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="9" failures="0" errors="0" time="19.769">
+  <testsuite name="CDK Nag" errors="0" failures="0" skipped="0" timestamp="2025-09-27T00:06:18" time="17.925" tests="1">
+    <testcase classname="CDK Nag Nag警告が存在することを確認" name="CDK Nag Nag警告が存在することを確認" time="0.66">
+    </testcase>
+  </testsuite>
+  <testsuite name="TodoInfraStack" errors="0" failures="0" skipped="0" timestamp="2025-09-27T00:06:36" time="1.523" tests="8">
+    <testcase classname="TodoInfraStack スナップショットと一致する" name="TodoInfraStack スナップショットと一致する" time="0.009">
+    </testcase>
+    <testcase classname="TodoInfraStack VPCが作成される" name="TodoInfraStack VPCが作成される" time="0.001">
+    </testcase>
+    <testcase classname="TodoInfraStack セキュリティグループが作成される" name="TodoInfraStack セキュリティグループが作成される" time="0.001">
+    </testcase>
+    <testcase classname="TodoInfraStack Aurora Serverless DBが作成される" name="TodoInfraStack Aurora Serverless DBが作成される" time="0.002">
+    </testcase>
+    <testcase classname="TodoInfraStack ECS Fargateサービスが作成される" name="TodoInfraStack ECS Fargateサービスが作成される" time="0.001">
+    </testcase>
+    <testcase classname="TodoInfraStack ALBが作成される" name="TodoInfraStack ALBが作成される" time="0.001">
+    </testcase>
+    <testcase classname="TodoInfraStack S3バケットが作成される" name="TodoInfraStack S3バケットが作成される" time="0.001">
+    </testcase>
+    <testcase classname="TodoInfraStack CloudFrontディストリビューションが作成される" name="TodoInfraStack CloudFrontディストリビューションが作成される" time="0.009">
+    </testcase>
+  </testsuite>
+</testsuites>

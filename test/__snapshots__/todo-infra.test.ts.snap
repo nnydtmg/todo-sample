@@ -1,0 +1,1478 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TodoInfraStack スナップショットと一致する 1`] = `
+{
+  "Outputs": {
+    "CloudFrontDomainName": {
+      "Description": "CloudFront Distribution Domain Name",
+      "Value": {
+        "Fn::GetAtt": [
+          "TodoAppDistribution0EA21669",
+          "DomainName",
+        ],
+      },
+    },
+    "DatabaseSecret": {
+      "Description": "Database Secret Name",
+      "Value": {
+        "Fn::Join": [
+          "-",
+          [
+            {
+              "Fn::Select": [
+                0,
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Fn::Select": [
+                        6,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "TestTodoInfraStackTodoDatabaseSecret761D85EE3fdaad7efa858a3daf9490cf0a702aeb",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              "Fn::Select": [
+                1,
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Fn::Select": [
+                        6,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "TestTodoInfraStackTodoDatabaseSecret761D85EE3fdaad7efa858a3daf9490cf0a702aeb",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              "Fn::Select": [
+                2,
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Fn::Select": [
+                        6,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Ref": "TestTodoInfraStackTodoDatabaseSecret761D85EE3fdaad7efa858a3daf9490cf0a702aeb",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        ],
+      },
+    },
+    "LoadBalancerDnsName": {
+      "Description": "Application Load Balancer DNS Name",
+      "Value": {
+        "Fn::GetAtt": [
+          "TodoAppLoadBalancerAA38E81B",
+          "DNSName",
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "AlbSecurityGroup86A59E99": {
+      "Properties": {
+        "GroupDescription": "Security group for ALB",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow HTTP from anywhere",
+            "FromPort": 8080,
+            "IpProtocol": "tcp",
+            "ToPort": 8080,
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "BackendService7A4224EE": {
+      "DependsOn": [
+        "TaskRole30FC0FBB",
+        "TodoAppLoadBalancerHttpListenerBackendTargetGroupRule09A0FB98",
+      ],
+      "Properties": {
+        "Cluster": {
+          "Ref": "TodoAppClusterFB2DA84E",
+        },
+        "DeploymentConfiguration": {
+          "Alarms": {
+            "AlarmNames": [],
+            "Enable": false,
+            "Rollback": false,
+          },
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50,
+        },
+        "DesiredCount": 1,
+        "EnableECSManagedTags": false,
+        "HealthCheckGracePeriodSeconds": 60,
+        "LaunchType": "FARGATE",
+        "LoadBalancers": [
+          {
+            "ContainerName": "TodoBackendContainer",
+            "ContainerPort": 8080,
+            "TargetGroupArn": {
+              "Ref": "BackendTargetGroupECF98930",
+            },
+          },
+        ],
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "FargateServiceSecurityGroupE31EE7F3",
+                  "GroupId",
+                ],
+              },
+            ],
+            "Subnets": [
+              {
+                "Ref": "TodoAppVpcPrivateSubnet1SubnetF5EC68C7",
+              },
+              {
+                "Ref": "TodoAppVpcPrivateSubnet2Subnet439DFF5F",
+              },
+            ],
+          },
+        },
+        "TaskDefinition": {
+          "Ref": "BackendTaskDefinitionEC224DE6",
+        },
+      },
+      "Type": "AWS::ECS::Service",
+    },
+    "BackendTargetGroupECF98930": {
+      "Properties": {
+        "HealthCheckIntervalSeconds": 60,
+        "HealthCheckPath": "/actuator/health",
+        "HealthCheckTimeoutSeconds": 5,
+        "Matcher": {
+          "HttpCode": "200",
+        },
+        "Port": 8080,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "BackendTaskDefinitionEC224DE6": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Environment": [
+              {
+                "Name": "SPRING_PROFILES_ACTIVE",
+                "Value": "prod",
+              },
+              {
+                "Name": "CORS_ALLOWED_ORIGINS",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://",
+                      {
+                        "Fn::GetAtt": [
+                          "TodoAppLoadBalancerAA38E81B",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              },
+            ],
+            "Essential": true,
+            "Image": {
+              "Fn::Sub": "123456789012.dkr.ecr.ap-northeast-1.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-123456789012-ap-northeast-1:18e1678fc6967ec983e48c7c03a1a27502f36fc28d448a32e40205cab18166d2",
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "BackendTaskDefinitionTodoBackendContainerLogGroup7154CB8B",
+                },
+                "awslogs-region": "ap-northeast-1",
+                "awslogs-stream-prefix": "todo-backend",
+              },
+            },
+            "Name": "TodoBackendContainer",
+            "PortMappings": [
+              {
+                "ContainerPort": 8080,
+                "Protocol": "tcp",
+              },
+            ],
+            "Secrets": [
+              {
+                "Name": "DB_URL",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "TodoDatabaseSecretAttachmentB0108D75",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "TodoDatabaseSecretAttachmentB0108D75",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "TodoDatabaseSecretAttachmentB0108D75",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        "Cpu": "512",
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "TaskExecutionRole250D2532",
+            "Arn",
+          ],
+        },
+        "Family": "TestTodoInfraStackBackendTaskDefinition71686FC8",
+        "Memory": "1024",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "TaskRole30FC0FBB",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "BackendTaskDefinitionTodoBackendContainerLogGroup7154CB8B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+      "DependsOn": [
+        "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-ap-northeast-1",
+          "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+        },
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Lambda function for auto-deleting objects in ",
+              {
+                "Ref": "TodoWebBucket530C039F",
+              },
+              " S3 bucket.",
+            ],
+          ],
+        },
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DBClusterParameterGroup2E3288B7": {
+      "Properties": {
+        "Description": "Cluster parameter group for aurora-mysql8.0",
+        "Family": "aurora-mysql8.0",
+        "Parameters": {
+          "character_set_client": "utf8mb4",
+          "character_set_connection": "utf8mb4",
+          "character_set_database": "utf8mb4",
+          "character_set_results": "utf8mb4",
+          "character_set_server": "utf8mb4",
+          "collation_server": "utf8mb4_unicode_ci",
+        },
+      },
+      "Type": "AWS::RDS::DBClusterParameterGroup",
+    },
+    "DatabaseSecurityGroup7319C0F6": {
+      "Properties": {
+        "GroupDescription": "Security group for RDS Aurora",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "255.255.255.255/32",
+            "Description": "Disallow all traffic",
+            "FromPort": 252,
+            "IpProtocol": "icmp",
+            "ToPort": 86,
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "DatabaseSecurityGroupfromTestTodoInfraStackFargateServiceSecurityGroup67EB40D13306980A06D6": {
+      "Properties": {
+        "Description": "Allow MySQL from Fargate service",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "DatabaseSecurityGroup7319C0F6",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "FargateServiceSecurityGroupE31EE7F3",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3306,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "DatabaseSubnetGroup": {
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet group for Aurora Serverless",
+        "SubnetIds": [
+          {
+            "Ref": "TodoAppVpcIsolatedSubnet1Subnet67CCC3F1",
+          },
+          {
+            "Ref": "TodoAppVpcIsolatedSubnet2SubnetA4AAFDDE",
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBSubnetGroup",
+    },
+    "FargateServiceSecurityGroupE31EE7F3": {
+      "Properties": {
+        "GroupDescription": "Security group for Fargate service",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "FargateServiceSecurityGroupfromTestTodoInfraStackAlbSecurityGroup7776D0BD80808D6C77D7": {
+      "Properties": {
+        "Description": "Allow traffic from ALB",
+        "FromPort": 8080,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "FargateServiceSecurityGroupE31EE7F3",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AlbSecurityGroup86A59E99",
+            "GroupId",
+          ],
+        },
+        "ToPort": 8080,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "TaskExecutionRole250D2532": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/SecretsManagerReadWrite",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TaskExecutionRoleDefaultPolicyA84DD1B0": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "TodoDatabaseSecretAttachmentB0108D75",
+              },
+            },
+            {
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:ap-northeast-1:123456789012:repository/cdk-hnb659fds-container-assets-123456789012-ap-northeast-1",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "BackendTaskDefinitionTodoBackendContainerLogGroup7154CB8B",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TaskExecutionRoleDefaultPolicyA84DD1B0",
+        "Roles": [
+          {
+            "Ref": "TaskExecutionRole250D2532",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TaskRole30FC0FBB": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestTodoInfraStackTodoDatabaseSecret761D85EE3fdaad7efa858a3daf9490cf0a702aeb": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Generated by the CDK for stack: ",
+              {
+                "Ref": "AWS::StackName",
+              },
+            ],
+          ],
+        },
+        "GenerateSecretString": {
+          "ExcludeCharacters": " %+~\`#$&*()|[]{}:;<>?!'/@"\\",
+          "GenerateStringKey": "password",
+          "PasswordLength": 30,
+          "SecretStringTemplate": "{"username":"admin"}",
+        },
+        "Name": "todo-app/db-credentials",
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TodoAppClusterFB2DA84E": {
+      "Type": "AWS::ECS::Cluster",
+    },
+    "TodoAppDistribution0EA21669": {
+      "Properties": {
+        "DistributionConfig": {
+          "CacheBehaviors": [
+            {
+              "AllowedMethods": [
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "PUT",
+                "PATCH",
+                "POST",
+                "DELETE",
+              ],
+              "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+              "Compress": true,
+              "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+              "PathPattern": "/api/*",
+              "TargetOriginId": "TestTodoInfraStackTodoAppDistributionOrigin2D694F82C",
+              "ViewerProtocolPolicy": "redirect-to-https",
+            },
+          ],
+          "CustomErrorResponses": [
+            {
+              "ErrorCode": 403,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html",
+            },
+            {
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html",
+            },
+          ],
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "Compress": true,
+            "TargetOriginId": "TestTodoInfraStackTodoAppDistributionOrigin1F93209D1",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "TodoWebBucket530C039F",
+                  "RegionalDomainName",
+                ],
+              },
+              "Id": "TestTodoInfraStackTodoAppDistributionOrigin1F93209D1",
+              "S3OriginConfig": {
+                "OriginAccessIdentity": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "origin-access-identity/cloudfront/",
+                      {
+                        "Ref": "TodoAppDistributionOrigin1S3Origin9FCECDB4",
+                      },
+                    ],
+                  ],
+                },
+              },
+            },
+            {
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "http-only",
+                "OriginSSLProtocols": [
+                  "TLSv1.2",
+                ],
+              },
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "TodoAppLoadBalancerAA38E81B",
+                  "DNSName",
+                ],
+              },
+              "Id": "TestTodoInfraStackTodoAppDistributionOrigin2D694F82C",
+            },
+          ],
+          "PriceClass": "PriceClass_100",
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "TodoAppDistributionOrigin1S3Origin9FCECDB4": {
+      "Properties": {
+        "CloudFrontOriginAccessIdentityConfig": {
+          "Comment": "Identity for TestTodoInfraStackTodoAppDistributionOrigin1F93209D1",
+        },
+      },
+      "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+    },
+    "TodoAppLoadBalancerAA38E81B": {
+      "DependsOn": [
+        "TodoAppVpcPublicSubnet1DefaultRoute24E187C4",
+        "TodoAppVpcPublicSubnet1RouteTableAssociationCFCC5683",
+        "TodoAppVpcPublicSubnet2DefaultRoute28683064",
+        "TodoAppVpcPublicSubnet2RouteTableAssociation9E020051",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "AlbSecurityGroup86A59E99",
+              "GroupId",
+            ],
+          },
+        ],
+        "Subnets": [
+          {
+            "Ref": "TodoAppVpcPublicSubnet1SubnetFE58179E",
+          },
+          {
+            "Ref": "TodoAppVpcPublicSubnet2Subnet12403AFE",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "TodoAppLoadBalancerHttpListenerA1D4AE1F": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "FixedResponseConfig": {
+              "ContentType": "text/plain",
+              "MessageBody": "Not Found",
+              "StatusCode": "404",
+            },
+            "Type": "fixed-response",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "TodoAppLoadBalancerAA38E81B",
+        },
+        "Port": 8080,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "TodoAppLoadBalancerHttpListenerBackendTargetGroupRule09A0FB98": {
+      "Properties": {
+        "Actions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "BackendTargetGroupECF98930",
+            },
+            "Type": "forward",
+          },
+        ],
+        "Conditions": [
+          {
+            "Field": "path-pattern",
+            "PathPatternConfig": {
+              "Values": [
+                "/api/*",
+              ],
+            },
+          },
+        ],
+        "ListenerArn": {
+          "Ref": "TodoAppLoadBalancerHttpListenerA1D4AE1F",
+        },
+        "Priority": 10,
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
+    "TodoAppVpc6E9F2D0F": {
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "TodoAppVpcIGW57ED4218": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "TodoAppVpcIsolatedSubnet1RouteTableAssociationD91CDBB9": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "TodoAppVpcIsolatedSubnet1RouteTableF3E357FF",
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcIsolatedSubnet1Subnet67CCC3F1",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TodoAppVpcIsolatedSubnet1RouteTableF3E357FF": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TodoAppVpcIsolatedSubnet1Subnet67CCC3F1": {
+      "Properties": {
+        "AvailabilityZone": "dummy1a",
+        "CidrBlock": "10.0.4.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TodoAppVpcIsolatedSubnet2RouteTable7B52A729": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TodoAppVpcIsolatedSubnet2RouteTableAssociationB94AF6D9": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "TodoAppVpcIsolatedSubnet2RouteTable7B52A729",
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcIsolatedSubnet2SubnetA4AAFDDE",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TodoAppVpcIsolatedSubnet2SubnetA4AAFDDE": {
+      "Properties": {
+        "AvailabilityZone": "dummy1b",
+        "CidrBlock": "10.0.5.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TodoAppVpcPrivateSubnet1DefaultRouteEDBD301F": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "TodoAppVpcPublicSubnet1NATGatewayA2D0226D",
+        },
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPrivateSubnet1RouteTableF32341F6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TodoAppVpcPrivateSubnet1RouteTableAssociation3C298E7A": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPrivateSubnet1RouteTableF32341F6",
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcPrivateSubnet1SubnetF5EC68C7",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TodoAppVpcPrivateSubnet1RouteTableF32341F6": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PrivateSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TodoAppVpcPrivateSubnet1SubnetF5EC68C7": {
+      "Properties": {
+        "AvailabilityZone": "dummy1a",
+        "CidrBlock": "10.0.2.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PrivateSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TodoAppVpcPrivateSubnet2DefaultRouteC08A589A": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "TodoAppVpcPublicSubnet1NATGatewayA2D0226D",
+        },
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPrivateSubnet2RouteTable26D17DB3",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TodoAppVpcPrivateSubnet2RouteTable26D17DB3": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PrivateSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TodoAppVpcPrivateSubnet2RouteTableAssociationAEF3F37F": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPrivateSubnet2RouteTable26D17DB3",
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcPrivateSubnet2Subnet439DFF5F",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TodoAppVpcPrivateSubnet2Subnet439DFF5F": {
+      "Properties": {
+        "AvailabilityZone": "dummy1b",
+        "CidrBlock": "10.0.3.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PrivateSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TodoAppVpcPublicSubnet1DefaultRoute24E187C4": {
+      "DependsOn": [
+        "TodoAppVpcVPCGW40B8EE22",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "TodoAppVpcIGW57ED4218",
+        },
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPublicSubnet1RouteTableAFAFC4D3",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TodoAppVpcPublicSubnet1EIP6284220A": {
+      "Properties": {
+        "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PublicSubnet1",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::EIP",
+    },
+    "TodoAppVpcPublicSubnet1NATGatewayA2D0226D": {
+      "DependsOn": [
+        "TodoAppVpcPublicSubnet1DefaultRoute24E187C4",
+        "TodoAppVpcPublicSubnet1RouteTableAssociationCFCC5683",
+      ],
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "TodoAppVpcPublicSubnet1EIP6284220A",
+            "AllocationId",
+          ],
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcPublicSubnet1SubnetFE58179E",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PublicSubnet1",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::NatGateway",
+    },
+    "TodoAppVpcPublicSubnet1RouteTableAFAFC4D3": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TodoAppVpcPublicSubnet1RouteTableAssociationCFCC5683": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPublicSubnet1RouteTableAFAFC4D3",
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcPublicSubnet1SubnetFE58179E",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TodoAppVpcPublicSubnet1SubnetFE58179E": {
+      "Properties": {
+        "AvailabilityZone": "dummy1a",
+        "CidrBlock": "10.0.0.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TodoAppVpcPublicSubnet2DefaultRoute28683064": {
+      "DependsOn": [
+        "TodoAppVpcVPCGW40B8EE22",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "TodoAppVpcIGW57ED4218",
+        },
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPublicSubnet2RouteTableE281AC34",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "TodoAppVpcPublicSubnet2RouteTableAssociation9E020051": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "TodoAppVpcPublicSubnet2RouteTableE281AC34",
+        },
+        "SubnetId": {
+          "Ref": "TodoAppVpcPublicSubnet2Subnet12403AFE",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TodoAppVpcPublicSubnet2RouteTableE281AC34": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TodoAppVpcPublicSubnet2Subnet12403AFE": {
+      "Properties": {
+        "AvailabilityZone": "dummy1b",
+        "CidrBlock": "10.0.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestTodoInfraStack/TodoAppVpc/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TodoAppVpcVPCGW40B8EE22": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "TodoAppVpcIGW57ED4218",
+        },
+        "VpcId": {
+          "Ref": "TodoAppVpc6E9F2D0F",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "TodoDatabaseF5E7F3B3": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "CopyTagsToSnapshot": true,
+        "DBClusterParameterGroupName": {
+          "Ref": "DBClusterParameterGroup2E3288B7",
+        },
+        "DBSubnetGroupName": {
+          "Ref": "DatabaseSubnetGroup",
+        },
+        "DatabaseName": "todo_db",
+        "DeletionProtection": false,
+        "EnableHttpEndpoint": true,
+        "Engine": "aurora-mysql",
+        "EngineMode": "serverless",
+        "EngineVersion": "8.0.mysql_aurora.3.03.0",
+        "MasterUserPassword": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "TestTodoInfraStackTodoDatabaseSecret761D85EE3fdaad7efa858a3daf9490cf0a702aeb",
+              },
+              ":SecretString:password::}}",
+            ],
+          ],
+        },
+        "MasterUsername": "admin",
+        "ScalingConfiguration": {
+          "AutoPause": true,
+          "MaxCapacity": 2,
+          "MinCapacity": 1,
+          "SecondsUntilAutoPause": 600,
+        },
+        "StorageEncrypted": true,
+        "VpcSecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "DatabaseSecurityGroup7319C0F6",
+              "GroupId",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBCluster",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TodoDatabaseSecretAttachmentB0108D75": {
+      "Properties": {
+        "SecretId": {
+          "Ref": "TestTodoInfraStackTodoDatabaseSecret761D85EE3fdaad7efa858a3daf9490cf0a702aeb",
+        },
+        "TargetId": {
+          "Ref": "TodoDatabaseF5E7F3B3",
+        },
+        "TargetType": "AWS::RDS::DBCluster",
+      },
+      "Type": "AWS::SecretsManager::SecretTargetAttachment",
+    },
+    "TodoWebBucket530C039F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TodoWebBucketAutoDeleteObjectsCustomResource04D5595A": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "TodoWebBucketPolicy6CE097F8",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "TodoWebBucket530C039F",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TodoWebBucketPolicy6CE097F8": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "TodoWebBucket530C039F",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:PutBucketPolicy",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "TodoWebBucket530C039F",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "TodoWebBucket530C039F",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Principal": {
+                "CanonicalUser": {
+                  "Fn::GetAtt": [
+                    "TodoAppDistributionOrigin1S3Origin9FCECDB4",
+                    "S3CanonicalUserId",
+                  ],
+                },
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "TodoWebBucket530C039F",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
