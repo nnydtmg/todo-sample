@@ -17,7 +17,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 実行ステージ
-FROM amazoncorretto:17-alpine
+FROM --platform=linux/x86_64 amazoncorretto:17-alpine
 
 # 作業ディレクトリの設定
 WORKDIR /app
@@ -35,7 +35,7 @@ RUN mkdir -p /app/logs
 
 # セキュリティのため、非rootユーザーを作成
 RUN addgroup -S spring && adduser -S spring -G spring && \
-    chown -R spring:spring /app
+  chown -R spring:spring /app
 USER spring:spring
 
 # ビルドステージからjarファイルをコピー

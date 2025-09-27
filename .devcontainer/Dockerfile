@@ -10,7 +10,7 @@ RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/bi
     && ln -s /usr/share/apache-maven-${MAVEN_VERSION}/bin/mvn /usr/bin/mvn
 
 # Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm@latest
 
