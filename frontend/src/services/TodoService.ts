@@ -1,11 +1,13 @@
 import axios from "axios";
 import { Todo } from "../types/Todo";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
 // APIのベースURLを環境変数から取得
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
+// const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
+const API_URL =
+  "http://todo-app-alb-2062774115.ap-northeast-1.elb.amazonaws.com/api";
 
 export const TodoService = {
   getAll: async (): Promise<Todo[]> => {

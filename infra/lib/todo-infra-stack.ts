@@ -125,7 +125,7 @@ export class TodoInfraStack extends Stack {
         version: rds.AuroraMysqlEngineVersion.VER_3_08_0,
       }),
       credentials: rds.Credentials.fromSecret(databaseCredentials),
-      defaultDatabaseName: config.database.db_name,
+      defaultDatabaseName: config.database.dbName,
       serverlessV2MaxCapacity: 1,
       serverlessV2MinCapacity: 0, // 最小 ACU
       writer: rds.ClusterInstance.serverlessV2("Writer"),
@@ -201,10 +201,13 @@ export class TodoInfraStack extends Stack {
       }),
       environment: {
         SPRING_PROFILES_ACTIVE: "prod",
-        DB_USERNAME: config.database.username,
-        DB_URL: `jdbc:mysql://${dbCluster.clusterEndpoint.hostname}:${dbCluster.clusterEndpoint.port}/${config.database.db_name}`,
+        DB_URL: `jdbc:mysql://${dbCluster.clusterEndpoint.hostname}:${dbCluster.clusterEndpoint.port}/${config.database.dbName}`,
       },
       secrets: {
+        DB_USERNAME: ecs.Secret.fromSecretsManager(
+          databaseCredentials,
+          "username"
+        ),
         DB_PASSWORD: ecs.Secret.fromSecretsManager(
           databaseCredentials,
           "password"
