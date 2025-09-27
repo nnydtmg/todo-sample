@@ -5,7 +5,6 @@ import { AwsSolutionsChecks } from "cdk-nag";
 import { Aspects } from "aws-cdk-lib";
 import { NagSuppressionsAspect } from "../lib/nag-suppressions";
 import { config as prdProperties } from "../env/prd";
-import { config as devProperties } from "../env/dev";
 
 const app = new cdk.App();
 
@@ -32,9 +31,7 @@ new TodoInfraStack(app, `${appName}-stack`, {
 });
 
 function getProperties(envKey: String) {
-  if (envKey === "dev") {
-    return devProperties;
-  } else if (envKey === "prd") {
+  if (envKey === "prd") {
     return prdProperties;
   } else {
     throw new Error("No Support environment");
