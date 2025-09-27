@@ -44,7 +44,7 @@ export class TodoInfraStack extends Stack {
     // VPCの作成
     const vpc = new ec2.Vpc(this, "VPC", {
       maxAzs: 2,
-      natGateways: 0,
+      natGateways: 1,
       vpcName: `${appName}-vpc`,
       subnetConfiguration: [
         {
