@@ -1,0 +1,22 @@
+*.js
+!jest.config.js
+*.d.ts
+node_modules
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+template.yaml
+cdk.context.json
+
+# Test reports
+coverage/
+test-reports/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Mac OS
+.DS_Store
