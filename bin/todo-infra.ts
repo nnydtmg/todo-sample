@@ -1,8 +1,19 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { TodoInfraStack } from '../lib/todo-infra-stack';
+import { AwsSolutionsChecks } from 'cdk-nag';
+import { Aspects } from 'aws-cdk-lib';
+import { NagSuppressionsAspect } from '../lib/nag-suppressions';
 
 const app = new cdk.App();
+
+// CDK Nagを適用
+Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
+
+// 抑制設定も適用
+Aspects.of(app).add(new NagSuppressionsAspect());
+
+// スタックの作成
 new TodoInfraStack(app, 'TodoInfraStack', {
   env: { 
     account: process.env.CDK_DEFAULT_ACCOUNT, 

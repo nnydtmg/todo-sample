@@ -8,14 +8,19 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "test:update": "jest --updateSnapshot",
+    "test:coverage": "jest --coverage",
+    "cdk": "cdk",
+    "cdk:nag": "cdk synth --no-path-metadata > template.yaml && npx cfn-nag template.yaml"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "22.7.9",
     "aws-cdk": "2.1029.3",
+    "cdk-nag": "^2.37.36",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
+    "jest-junit": "^16.0.0",
+    "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3"
   },
