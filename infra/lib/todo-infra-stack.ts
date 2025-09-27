@@ -72,14 +72,9 @@ export class TodoInfraStack extends Stack {
       allowAllOutbound: true,
     });
     albSg.addIngressRule(
-      ec2.Peer.anyIpv4(),
+      ec2.Peer.prefixList("pl-58a04531"), // AWS CloudFrontのプレフィックスリストID（東京リージョン）
       ec2.Port.tcp(80),
-      "Allow HTTP from anywhere"
-    );
-    albSg.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(443),
-      "Allow HTTPS from anywhere"
+      "Allow HTTP from CloudFront"
     );
 
     const fargateServiceSg = new ec2.SecurityGroup(
@@ -213,16 +208,6 @@ export class TodoInfraStack extends Stack {
           "password"
         ),
       },
-      healthCheck: {
-        command: [
-          "CMD-SHELL",
-          `curl -f http://localhost:${config.backend.container_port}/actuator/health || exit 1`,
-        ],
-        interval: Duration.seconds(30),
-        timeout: Duration.seconds(5),
-        retries: 3,
-        startPeriod: Duration.seconds(60),
-      },
     });
 
     container.addPortMappings({
@@ -271,6 +256,9 @@ export class TodoInfraStack extends Stack {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
+      minHealthyPercent: 100,
+      maxHealthyPercent: 200,
+      healthCheckGracePeriod: Duration.minutes(3),
     });
 
     // サービスをALBのターゲットとして登録
