@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Waiting for MySQL to start..."
-while ! mysqladmin ping -h"localhost" --silent; do
+while ! mysqladmin ping -h"db" --silent; do
     sleep 1
 done
 echo "MySQL started"

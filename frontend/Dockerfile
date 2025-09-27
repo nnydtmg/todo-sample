@@ -14,7 +14,8 @@ RUN npm ci
 COPY . .
 
 # 環境変数の設定（本番ビルド用）
-ENV NODE_ENV=production
+# ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 # アプリケーションのビルド
 RUN npm run build
@@ -29,7 +30,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/build /usr/share/nginx/html
 
 # ポートの公開
-EXPOSE 80
+EXPOSE 3000
 
 # Nginxを起動
 CMD ["nginx", "-g", "daemon off;"]
