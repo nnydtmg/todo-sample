@@ -42,9 +42,9 @@ export class TodoInfraStack extends Stack {
     });
 
     // VPCの作成
-    const vpc = new ec2.Vpc(this, "TodoVPC", {
+    const vpc = new ec2.Vpc(this, "VPC", {
       maxAzs: 2,
-      natGateways: 1,
+      natGateways: 0,
       vpcName: `${appName}-vpc`,
       subnetConfiguration: [
         {
@@ -135,7 +135,7 @@ export class TodoInfraStack extends Stack {
     });
 
     // ECRリポジトリを作成
-    const repository = new ecr.Repository(this, "TodoRepository", {
+    const repository = new ecr.Repository(this, "Repository", {
       repositoryName: `${appName}-repository`,
       removalPolicy: RemovalPolicy.DESTROY, // 開発環境のため - 本番環境では適切に設定する
     });
@@ -152,7 +152,7 @@ export class TodoInfraStack extends Stack {
     );
 
     // ECSクラスターの作成
-    const cluster = new ecs.Cluster(this, "TodoCluster", {
+    const cluster = new ecs.Cluster(this, "Cluster", {
       vpc,
       clusterName: `${appName}-cluster`,
     });
@@ -216,11 +216,11 @@ export class TodoInfraStack extends Stack {
     });
 
     // ALBの作成
-    const alb = new elbv2.ApplicationLoadBalancer(this, "TodoALB", {
+    const alb = new elbv2.ApplicationLoadBalancer(this, "ALB", {
       vpc,
-      internetFacing: true,
+      internetFacing: false,
       securityGroup: albSg,
-      loadBalancerName: `${appName}-alb`,
+      loadBalancerName: `${appName}-internal-alb`,
     });
 
     // ALBのターゲットグループの作成
@@ -281,47 +281,43 @@ export class TodoInfraStack extends Stack {
     });
 
     // CloudFront Distribution
-    const distribution = new cloudfront.Distribution(
-      this,
-      "TodoAppDistribution",
-      {
-        defaultBehavior: {
-          origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
+    const distribution = new cloudfront.Distribution(this, "Distribution", {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      additionalBehaviors: {
+        "/api/*": {
+          origin: origins.VpcOrigin.withApplicationLoadBalancer(alb, {
+            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+          }),
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
         },
-        additionalBehaviors: {
-          "/api/*": {
-            origin: new origins.LoadBalancerV2Origin(alb, {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-          },
+      },
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      enableIpv6: false,
+      httpVersion: cloudfront.HttpVersion.HTTP2,
+      defaultRootObject: "index.html",
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responsePagePath: "/index.html",
+          responseHttpStatus: 200,
         },
-        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        enableIpv6: true,
-        httpVersion: cloudfront.HttpVersion.HTTP2,
-        defaultRootObject: "index.html",
-        errorResponses: [
-          {
-            httpStatus: 404,
-            responsePagePath: "/index.html",
-            responseHttpStatus: 200,
-          },
-          {
-            httpStatus: 403,
-            responsePagePath: "/index.html",
-            responseHttpStatus: 200,
-          },
-        ],
-      }
-    );
+        {
+          httpStatus: 403,
+          responsePagePath: "/index.html",
+          responseHttpStatus: 200,
+        },
+      ],
+    });
 
     // サービスにCloudfrontドメインを環境変数として追加
     container.addEnvironment(

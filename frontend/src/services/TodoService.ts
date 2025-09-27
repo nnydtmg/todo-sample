@@ -6,7 +6,7 @@ import { Todo } from "../types/Todo";
 
 // APIのベースURLを環境変数から取得
 // const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
-const API_URL = `https://d496wsovnrivp.cloudfront.net/api`;
+const API_URL = `https://d3gfssw5pky79.cloudfront.net/api`;
 
 export const TodoService = {
   getAll: async (): Promise<Todo[]> => {
