@@ -35,11 +35,12 @@
 - ALB - バックエンドサービスへのロードバランシング
 - ECS on Fargate - バックエンド (Spring Boot) のコンテナ実行環境
 - Aurora Serverless v2 MySQL - スケーラブルなデータベース
+- AWS Secrets Manager - データベース認証情報の安全な管理
 
 ## プロジェクト構成
 
 ```
-todo-sample/
+todo-app/
 │
 ├── backend/                     # Spring Bootプロジェクト
 │   ├── src/
@@ -64,16 +65,21 @@ todo-sample/
 │   ├── public/
 │   └── src/
 │       ├── components/         # Reactコンポーネント
-│       ├── services/          # APIサービス
-│       ├── hooks/             # カスタムフック
-│       ├── types/             # TypeScript型定義
-│       └── utils/             # ユーティリティ関数
+│       ├── services/           # APIサービス
+│       ├── hooks/              # カスタムフック
+│       ├── types/              # TypeScript型定義
+│       └── utils/              # ユーティリティ関数
 │
-└── todo-infra/                # AWS CDK プロジェクト
-    ├── bin/                   # CDKアプリケーションのエントリーポイント
-    ├── lib/                   # CDKスタックとコンストラクト
-    ├── test/                  # CDKテスト
-    └── cdk.json              # CDK設定ファイル
+├── infra/                     # AWS CDK プロジェクト
+│   ├── bin/                   # CDKアプリケーションのエントリーポイント
+│   ├── env/                   # 環境別設定
+│   ├── lib/                   # CDKスタックとコンストラクト
+│   ├── test/                  # CDKテスト
+│   └── cdk.json               # CDK設定ファイル
+│
+├── .devcontainer/            # Dev Container設定
+├── docker-compose.yml        # ローカル開発用Docker Compose設定
+└── ADR/                      # アーキテクチャ決定記録
 ```
 
 ## 開発環境での開始方法
@@ -85,6 +91,7 @@ todo-sample/
 - Docker および Docker Compose（Dockerで実行する場合）
 - AWS CLI（インフラをデプロイする場合）
 - AWS CDK v2（インフラをデプロイする場合）
+- Visual Studio Code（Dev Container機能を使用する場合）
 
 ### 1. ローカルでの起動（Docker不使用）
 
@@ -173,13 +180,16 @@ java -jar app.jar --spring.profiles.active=prod
 ### 1. CDK ブートストラップ（初回のみ）
 
 ```bash
-cd todo-infra
+cd infra
 cdk bootstrap
 ```
 
 ### 2. インフラのデプロイ
 
 ```bash
+# 依存パッケージのインストール
+npm install
+
 # スタックの合成（CloudFormation テンプレートの生成）
 cdk synth
 
@@ -192,10 +202,20 @@ cdk deploy
 ```bash
 # フロントエンドのビルド
 cd ../frontend
+npm install
 npm run build
 
 # S3バケットへのデプロイ（CDKデプロイ後に表示されるバケット名を使用）
 aws s3 sync build/ s3://YOUR-S3-BUCKET-NAME/
+```
+
+### 4. 環境別のデプロイ
+
+本番環境（prd）へのデプロイ:
+
+```bash
+cd infra
+cdk deploy --context env=prd
 ```
 
 ## CDK環境変数の設定
@@ -217,3 +237,20 @@ aws s3 sync build/ s3://YOUR-S3-BUCKET-NAME/
   * リソース削除保護の有効化
   * シークレットローテーションの設定
   * CloudTrail や Config による監査
+
+## アーキテクチャ決定記録 (ADR)
+
+このプロジェクトでは、重要な設計判断を記録するためにADRを使用しています。`ADR`ディレクトリには以下のような記録が含まれています：
+
+- アーキテクチャの概要
+- データベーススキーマ管理
+- フロントエンドの状態管理
+- API設計
+- テスト戦略
+- UIコンポーネント設計
+- 開発環境
+- 環境別設定
+- Dockerマルチステージビルド
+- ログ設定
+
+詳細については各ADRファイルを参照してください。
