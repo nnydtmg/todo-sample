@@ -45,6 +45,7 @@ buildNumber.properties
 *.d.ts
 .cdk.staging
 cdk.out
+!infra/lib/canary/nodejs/node_modules/index.js
 
 # IntelliJ project files
 .idea/
