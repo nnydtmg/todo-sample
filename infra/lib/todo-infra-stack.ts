@@ -20,6 +20,8 @@ import * as sm from "aws-cdk-lib/aws-secretsmanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as synthetics from "aws-cdk-lib/aws-synthetics";
+import * as rum from "aws-cdk-lib/aws-rum";
+import * as cognitoidp from "aws-cdk-lib/aws-cognito-identitypool";
 import { Construct } from "constructs";
 import { NagSuppressions } from "cdk-nag";
 import * as imagedeploy from "cdk-docker-image-deployment";
@@ -449,6 +451,46 @@ export class TodoInfraStack extends Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
     );
 
+    // CloudWatch RUMの作成
+    // Create Cognito IdentityPool
+    const myIdentityPool = new cognitoidp.IdentityPool(
+      this,
+      "RumIdentityPool",
+      {
+        allowUnauthenticatedIdentities: true,
+      }
+    );
+    const unauthenticatedRole = myIdentityPool.unauthenticatedRole;
+    const rumApp = new rum.CfnAppMonitor(this, "RumApp", {
+      name: `${appName}-rum`,
+      appMonitorConfiguration: {
+        guestRoleArn: unauthenticatedRole.roleArn,
+        identityPoolId: myIdentityPool.identityPoolId,
+        enableXRay: true,
+        sessionSampleRate: 1,
+        telemetries: ["errors", "performance", "http"],
+      },
+      domain: distribution.distributionDomainName,
+      cwLogEnabled: true,
+    });
+    unauthenticatedRole.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["rum:PutRumEvents"],
+        resources: [`arn:aws:rum:${this.region}:${this.account}:appmonitor/*`],
+      })
+    );
+    unauthenticatedRole.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:PutResourcePolicy"],
+        resources: ["*"],
+      })
+    );
+    unauthenticatedRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
+    );
+
     // CDK Nag suppressions
     NagSuppressions.addStackSuppressions(this, [
       {
@@ -554,6 +596,10 @@ export class TodoInfraStack extends Stack {
       {
         id: "AwsSolutions-CB4",
         reason: "このデモ用プロジェクトではモジュール内でのみ使用",
+      },
+      {
+        id: "AwsSolutions-COG7",
+        reason: "RUMでCognito Identity Poolを使用するため",
       },
     ]);
 
