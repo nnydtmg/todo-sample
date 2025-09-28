@@ -19,6 +19,7 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as sm from "aws-cdk-lib/aws-secretsmanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as synthetics from "aws-cdk-lib/aws-synthetics";
 import { Construct } from "constructs";
 import { NagSuppressions } from "cdk-nag";
 import * as imagedeploy from "cdk-docker-image-deployment";
@@ -427,6 +428,25 @@ export class TodoInfraStack extends Stack {
     container.addEnvironment(
       "CORS_ALLOWED_ORIGINS",
       `https://${distribution.distributionDomainName}`
+    );
+
+    // Synthetics Canaryの作成
+    const canary = new synthetics.Canary(this, "Canary", {
+      canaryName: `${appName}-canary`,
+      runtime: synthetics.Runtime.SYNTHETICS_NODEJS_PUPPETEER_11_0,
+      test: synthetics.Test.custom({
+        code: synthetics.Code.fromAsset(path.join(__dirname, "canary")),
+        handler: "index.handler",
+      }),
+      schedule: synthetics.Schedule.rate(Duration.minutes(5)),
+      environmentVariables: {
+        SITE_URL: `https://${distribution.distributionDomainName}`,
+      },
+      activeTracing: true, // Apprication Insightsと連携するためにX-Rayを有効化
+    });
+    // CanaryのIAMロールにX-Ray用のポリシーをアタッチ
+    canary.role.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
     );
 
     // CDK Nag suppressions
