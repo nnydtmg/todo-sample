@@ -168,15 +168,14 @@ export class TodoInfraStack extends Stack {
     });
 
     // Fargateサービスの実行ロール
+    // イメージ取得とログ出力に必要な権限のみ。DB 認証情報（Secrets Manager）の読み取り権限は
+    // container の secrets 指定から CDK が対象シークレットに限定して自動付与する。
+    // CloudWatch Agent が使う権限はタスクロール側に付与している。
     const taskExecutionRole = new iam.Role(this, "TaskExecutionRole", {
       assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AmazonECSTaskExecutionRolePolicy"
-        ),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMFullAccess"),
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "CloudWatchAgentServerPolicy"
         ),
       ],
     });
@@ -190,6 +189,7 @@ export class TodoInfraStack extends Stack {
       inlinePolicies: {
         CustomPolicy: new iam.PolicyDocument({
           statements: [
+            // CloudWatch Logs は自アカウント・自リージョンのロググループに限定
             new iam.PolicyStatement({
               effect: iam.Effect.ALLOW,
               actions: [
@@ -199,6 +199,23 @@ export class TodoInfraStack extends Stack {
                 "logs:DescribeLogStreams",
                 "logs:DescribeLogGroups",
                 "logs:PutRetentionPolicy",
+              ],
+              resources: [
+                `arn:aws:logs:${this.region}:${this.account}:log-group:*`,
+              ],
+            }),
+            // CloudWatch Agent の設定を SSM パラメータから読む場合に限定（自アカウントのみ）
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: ["ssm:GetParameters"],
+              resources: [
+                `arn:aws:ssm:${this.region}:${this.account}:parameter/AmazonCloudWatch-*`,
+              ],
+            }),
+            // 以下のアクションはリソースレベルの権限をサポートしないため "*" を指定する
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
                 "xray:PutTraceSegments",
                 "xray:PutTelemetryRecords",
                 "xray:GetSamplingRules",
@@ -207,7 +224,6 @@ export class TodoInfraStack extends Stack {
                 "cloudwatch:PutMetricData",
                 "ec2:DescribeVolumes",
                 "ec2:DescribeTags",
-                "ssm:GetParameters",
               ],
               resources: ["*"],
             }),
@@ -378,8 +394,7 @@ export class TodoInfraStack extends Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY, // 開発環境のため - 本番環境では適切に設定する
       autoDeleteObjects: true, // 開発環境のため - 本番環境では適切に設定する
-      websiteIndexDocument: "index.html",
-      websiteErrorDocument: "index.html",
+      enforceSSL: true, // HTTPS 以外のアクセスをバケットポリシーで拒否
     });
 
     new s3deploy.BucketDeployment(this, "deployreactApp", {
@@ -461,8 +476,9 @@ export class TodoInfraStack extends Stack {
       }
     );
     const unauthenticatedRole = myIdentityPool.unauthenticatedRole;
+    const rumAppName = `${appName}-rum`;
     const rumApp = new rum.CfnAppMonitor(this, "RumApp", {
-      name: `${appName}-rum`,
+      name: rumAppName,
       appMonitorConfiguration: {
         guestRoleArn: unauthenticatedRole.roleArn,
         identityPoolId: myIdentityPool.identityPoolId,
@@ -473,22 +489,17 @@ export class TodoInfraStack extends Stack {
       domain: distribution.distributionDomainName,
       cwLogEnabled: true,
     });
+    // ゲストロール（未認証 ID）は誰でも取得できる資格情報なので、
+    // RUM のデータ送信（このアプリモニターへの PutRumEvents）だけを許可する。
+    // X-Ray 連携は RUM サービス側で行われるため、ゲストに X-Ray / Logs の権限は不要。
     unauthenticatedRole.addToPrincipalPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ["rum:PutRumEvents"],
-        resources: [`arn:aws:rum:${this.region}:${this.account}:appmonitor/*`],
+        resources: [
+          `arn:aws:rum:${this.region}:${this.account}:appmonitor/${rumAppName}`,
+        ],
       })
-    );
-    unauthenticatedRole.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["logs:PutResourcePolicy"],
-        resources: ["*"],
-      })
-    );
-    unauthenticatedRole.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
     );
 
     // CDK Nag suppressions
